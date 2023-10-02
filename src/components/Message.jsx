@@ -37,7 +37,7 @@ const Message = ({
               🗑️
             </button>
           ) : (
-            <div className="flex flex-col mr-2">
+            <div className="flex flex-col mx-2">
               <button onClick={() => upCount(id)} className="my-1">
                 🔼
               </button>
