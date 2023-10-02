@@ -19,6 +19,7 @@ function App() {
   const [voted, setVoted] = useState({});
   const [user, setUser] = useState({});
   const [timestamp, setTimestmp] = useState(null);
+  const [sortedKeys, setSortedKeys] = useState([]);
 
   useEffect(() => {
     const env = import.meta.env;
@@ -148,6 +149,11 @@ function App() {
     return atob(base64);
   };
 
+  const sortKeys = (keys) => {
+    keys.sort((a, b) => (comments[b].ups - comments[b].downs) - (comments[a].ups - comments[a].downs));
+    return keys
+  }
+
   const handleKeyPress = (key) => {
     if (key.code === "Enter") {
       addComment(user.displayName, input);
@@ -158,7 +164,7 @@ function App() {
   return (
     <div className="mx-3 flex flex-col h-screen justify-between">
       <div className="overflow-y-auto">
-        {Object.keys(comments === null ? {} : comments).map((c, index) => (
+        {sortKeys(Object.keys(comments === null ? {} : comments)).map((c, index) => (
           <Message
             key={index}
             id={c}
