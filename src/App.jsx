@@ -110,6 +110,7 @@ function App() {
   const upCount = (id) => {
     console.log(voted);
     if (voted[id] === 1) return;
+    if (user.email === undefined) return;
     const prev = comments[id].ups;
     const ref_ = ref(database, "comments/" + id);
     if (voted[id] === undefined) {
@@ -124,6 +125,7 @@ function App() {
   const downCount = (id) => {
     console.log(voted);
     if (voted[id] === -1) return;
+    if (user.email === undefined) return;
     const prev = comments[id].downs;
     const ref_ = ref(database, "comments/" + id);
     if (voted[id] === undefined) {
