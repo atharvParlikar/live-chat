@@ -9,8 +9,14 @@ import {
   onValue,
   child,
 } from "firebase/database";
-import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  getAuth,
+  signInWithPopup,
+  signInWithRedirect,
+} from "firebase/auth";
 import Message from "./components/Message";
+import AuthBtn from "./components/AuthBtn";
 
 function App() {
   const [database, setDatabase] = useState(null);
@@ -19,11 +25,12 @@ function App() {
   const [voted, setVoted] = useState({});
   const [user, setUser] = useState({});
   const [timestamp, setTimestmp] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [allow, setAllow] = useState(false);
   const [sortedKeys, setSortedKeys] = useState([]);
 
   useEffect(() => {
     const env = import.meta.env;
-    console.log(env.DATABASE_URL);
     const firebaseConfig = {
       apiKey: env.VITE_API_KEY,
       authDomain: env.VITE_AUTH_DOMAIN,
@@ -47,6 +54,9 @@ function App() {
     });
 
     // authentication stuff
+  }, []);
+
+  const authenticate = () => {
     const provider = new GoogleAuthProvider();
     const auth = getAuth();
     signInWithPopup(auth, provider)
@@ -54,7 +64,10 @@ function App() {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const user_ = result.user;
 
-        const userRef = ref(db, "users/" + urlSafeBase64Encode(user_.email));
+        const userRef = ref(
+          database,
+          "users/" + urlSafeBase64Encode(user_.email)
+        );
         onValue(userRef, (snapshot) => {
           const data = snapshot.val();
           if (data !== null) {
@@ -64,9 +77,10 @@ function App() {
           }
         });
         setUser(user_);
-
+        setAuthenticated(true);
+        setAllow(true);
         const timestampRef = ref(
-          db,
+          database,
           "timestamp/" + urlSafeBase64Encode(user_.email)
         );
         onValue(timestampRef, (snapshot) => {
@@ -79,7 +93,7 @@ function App() {
         alert(errorMessage);
         alert("Please refresh to try again");
       });
-  }, []);
+  };
 
   const addComment = (author, text) => {
     if (Math.floor(Date.now() / 1000) - timestamp < 60) return;
@@ -150,32 +164,50 @@ function App() {
   };
 
   const sortKeys = (keys) => {
-    keys.sort((a, b) => (comments[b].ups - comments[b].downs) - (comments[a].ups - comments[a].downs));
-    return keys
-  }
+    keys.sort(
+      (a, b) =>
+        comments[b].ups -
+        comments[b].downs -
+        (comments[a].ups - comments[a].downs)
+    );
+    return keys;
+  };
 
   const handleKeyPress = (key) => {
+    if (!authenticated) return;
     if (key.code === "Enter") {
       addComment(user.displayName, input);
       setInput("");
     }
   };
 
-  return (
-    <div className="mx-3 flex flex-col h-screen justify-between">
+  const handleClick = () => {
+    if (!authenticated) return false;
+    addComment(user.displayName, input);
+    setInput("");
+  };
+
+  console.log(allow);
+
+  return !allow ? (
+    <AuthBtn authenticate={authenticate} skipAuth={() => setAllow(true)} />
+  ) : (
+    <div className="mx-3 flex flex-col h-screen justify-between font-mono">
       <div className="overflow-y-auto">
-        {sortKeys(Object.keys(comments === null ? {} : comments)).map((c, index) => (
-          <Message
-            key={index}
-            id={c}
-            author={comments[c].author}
-            text={comments[c].text}
-            ups={comments[c].ups}
-            downs={comments[c].downs}
-            upCount={upCount}
-            downCount={downCount}
-          />
-        ))}
+        {sortKeys(Object.keys(comments === null ? {} : comments)).map(
+          (c, index) => (
+            <Message
+              key={index}
+              id={c}
+              author={comments[c].author}
+              text={comments[c].text}
+              ups={comments[c].ups}
+              downs={comments[c].downs}
+              upCount={upCount}
+              downCount={downCount}
+            />
+          )
+        )}
       </div>
       <div className="flex mb-3">
         <input
@@ -185,10 +217,7 @@ function App() {
           className="border-2 border-black rounded-md p-2 w-full"
         />
         <button
-          onClick={() => {
-            addComment(user.displayName, input);
-            setInput("");
-          }}
+          onClick={handleClick}
           className="border-2 border-gray-800 rounded-md px-3 ml-2"
         >
           send
