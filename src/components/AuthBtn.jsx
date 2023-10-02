@@ -1,7 +1,7 @@
 const AuthBtn = ({ authenticate, skipAuth }) => {
   return (
     <div className="w-full h-screen bg-yellow-300 flex flex-col justify-center font-mono">
-      <div className="flex flex-col items-center ">
+      <div className="flex flex-col items-center">
         <button
           className="p-4 border-4 border-gray-800 mb-4 rounded-md font-bold"
           onClick={authenticate}
@@ -11,7 +11,7 @@ const AuthBtn = ({ authenticate, skipAuth }) => {
         >
           Authenticate
         </button>
-        <p onClick={skipAuth} className="cursor-pointer underline">
+        <p onClick={skipAuth} className="cursor-pointer underline text-center">
           skip authenticateion (watch-only mode)
         </p>
       </div>

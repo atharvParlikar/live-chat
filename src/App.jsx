@@ -8,13 +8,9 @@ import {
   set,
   onValue,
   child,
+  remove,
 } from "firebase/database";
-import {
-  GoogleAuthProvider,
-  getAuth,
-  signInWithPopup,
-  signInWithRedirect,
-} from "firebase/auth";
+import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
 import Message from "./components/Message";
 import AuthBtn from "./components/AuthBtn";
 
@@ -27,7 +23,7 @@ function App() {
   const [timestamp, setTimestmp] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [allow, setAllow] = useState(false);
-  const [sortedKeys, setSortedKeys] = useState([]);
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     const env = import.meta.env;
@@ -52,8 +48,6 @@ function App() {
       const data = snapshot.val();
       setComments(data);
     });
-
-    // authentication stuff
   }, []);
 
   const authenticate = () => {
@@ -63,6 +57,8 @@ function App() {
       .then((result) => {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const user_ = result.user;
+
+        if (user_.email === "atharvparlikar@gmail.com") setAdmin(true);
 
         const userRef = ref(
           database,
@@ -92,6 +88,7 @@ function App() {
         const errorMessage = error.message;
         alert(errorMessage);
         alert("Please refresh to try again");
+        setAllow(true);
       });
   };
 
@@ -111,6 +108,11 @@ function App() {
       urlSafeBase64Encode(user.email)
     );
     set(newTimestampRef, Math.floor(Date.now() / 1000));
+  };
+
+  const deleteComment = (commentID) => {
+    const commentRef = ref(database, "comments/" + commentID);
+    remove(commentRef);
   };
 
   const updateVoted = (id, val) => {
@@ -192,7 +194,7 @@ function App() {
   return !allow ? (
     <AuthBtn authenticate={authenticate} skipAuth={() => setAllow(true)} />
   ) : (
-    <div className="mx-3 flex flex-col h-screen justify-between font-mono">
+    <div className="mx-3 flex flex-col h-[90vh] justify-between font-mono xl:h-screen">
       <div className="overflow-y-auto">
         {sortKeys(Object.keys(comments === null ? {} : comments)).map(
           (c, index) => (
@@ -205,16 +207,19 @@ function App() {
               downs={comments[c].downs}
               upCount={upCount}
               downCount={downCount}
+              admin={admin}
+              delete_={deleteComment}
             />
           )
         )}
       </div>
-      <div className="flex mb-3">
+      <div className="flex mb-3 pt-2">
         <input
           onKeyDown={handleKeyPress}
           onChange={(e) => setInput(e.target.value)}
           value={input}
           className="border-2 border-black rounded-md p-2 w-full"
+          placeholder="Message..."
         />
         <button
           onClick={handleClick}
