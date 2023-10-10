@@ -24,9 +24,9 @@ function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [allow, setAllow] = useState(false);
   const [admin, setAdmin] = useState(false);
+  const env = import.meta.env;
 
   useEffect(() => {
-    const env = import.meta.env;
     const firebaseConfig = {
       apiKey: env.VITE_API_KEY,
       authDomain: env.VITE_AUTH_DOMAIN,
@@ -58,7 +58,7 @@ function App() {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const user_ = result.user;
 
-        if (user_.email === "atharvparlikar@gmail.com") setAdmin(true);
+        if (user_.email === env.VITE_ADMIN_MAIL) setAdmin(true);
 
         const userRef = ref(
           database,
@@ -93,7 +93,7 @@ function App() {
   };
 
   const addComment = (author, text) => {
-    if (Math.floor(Date.now() / 1000) - timestamp < 60) return;
+    if (Math.floor(Date.now() / 1000) - timestamp < parseInt(env.VITE_COOLDOWN)) return;
     const commentRef = ref(database, "comments");
     const newCommentRef = push(commentRef);
     set(newCommentRef, {
@@ -209,6 +209,7 @@ function App() {
               downCount={downCount}
               admin={admin}
               delete_={deleteComment}
+              downVote={env.VITE_DOWNVOTE}
             />
           )
         )}
