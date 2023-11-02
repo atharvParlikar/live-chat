@@ -184,7 +184,7 @@ function App() {
   };
 
   const handleClick = () => {
-    if (!authenticated) return false;
+    if (!authenticated || input.length === 0) return false;
     addComment(user.displayName, input);
     setInput("");
   };
